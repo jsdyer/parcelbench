@@ -22,11 +22,11 @@ export function rankedQuotes(quotes,target) {
 export function comparison(a,b) {
   return a.map(x=>{const y=b.find(v=>v.code===x.code);return y?{name:x.name,a:x.total,b:y.total,saving:Math.round((x.total-y.total)*100)/100}:null;}).filter(Boolean);
 }
-export function hoursText(hours) {
-  if(hours===null)return 'Load the published opening hours.';
-  if(!hours.length)return 'Opening hours were not returned.';
+export function hoursText(hours,loaded=false) {
+  if(hours===null&&!loaded)return 'Load the published opening hours.';
+  if(!Array.isArray(hours)||!hours.length)return 'Opening hours are unavailable here. Check this outlet in Canada Post’s finder before visiting.';
   const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  return hours.map(h=>`${days[h.day-1]}: ${h.times.length?Array.from({length:Math.ceil(h.times.length/2)},(_,i)=>h.times[i*2]+'–'+(h.times[i*2+1]||'end of day')).join(', '):'hours not published'}`).join('\n');
+  return hours.map(h=>`${days[h.day-1]}: ${h.times.length?Array.from({length:Math.ceil(h.times.length/2)},(_,i)=>h.times[i*2]+'–'+(h.times[i*2+1]||'end of day')).join(', '):'hours unavailable here'}`).join('\n');
 }
 export function officeMap(office) {
   if(!office.coordinates)return null;

@@ -1,21 +1,7 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { cleanLines } from '../web/model.mjs';
-test('trims, removes blanks and preserves first-seen order', () => {
-  assert.deepEqual(cleanLines('  Halifax\nLangley\nHalifax\n\nVancouver  '), {
-    text: 'Halifax\nLangley\nVancouver', count: 3, removed: 1,
-  });
-});
-test('supports Windows and old Mac line endings', () => {
-  assert.equal(cleanLines('a\r\nb\ra').text, 'a\nb');
-});
-test('empty text and whitespace produce an empty result', () => {
-  assert.deepEqual(cleanLines(' \n\t'), { text: '', count: 0, removed: 0 });
-});
-test('preserves case and Unicode', () => {
-  assert.equal(cleanLines('Québec\nquébec\n東京\nQuébec').text, 'Québec\nquébec\n東京');
-});
-test('treats markup as ordinary text', () => {
-  assert.equal(cleanLines('<script>alert(1)</script>\n<script>alert(1)</script>').text, '<script>alert(1)</script>');
-});
-test('rejects non-text input', () => { assert.throws(() => cleanLines(null), TypeError); });
+import test from 'node:test';import assert from 'node:assert/strict';
+import {quoteParams,validPostal,rankedQuotes,comparison,hoursText,officeMap} from '../web/model.mjs';
+const input={origin:'b3j 1s9',destination:'Y1A 1A1',mailingDate:'2026-12-01',weight:'1',length:'10',width:'20',height:'30',weightB:'1.1',lengthB:'8',widthB:'18',heightB:'22'};
+test('arbitrary valid locations and both box weights',()=>{assert.equal(quoteParams(input).origin,'B3J1S9');assert.equal(quoteParams(input,'B').weight,'1.1');assert(validPostal('X0A 0H0'));assert(!validPostal('D1A 1A1'));assert.throws(()=>quoteParams({...input,weight:'NaN'}));assert.throws(()=>quoteParams({...input,mailingDate:'2026-02-30'}));});
+test('compare matched service prices, keep missing delivery unknown',()=>{const a=[{code:'A',name:'One',total:12,expectedDeliveryDate:null},{code:'B',name:'Two',total:10,expectedDeliveryDate:'2026-12-03'}],b=[{code:'A',name:'One',total:10.1}];assert.equal(comparison(a,b)[0].saving,1.9);assert.equal(rankedQuotes(a,'2026-12-02')[0].meetsTarget,false);assert.equal(rankedQuotes(a,'2026-12-05')[1].meetsTarget,null);});
+test('hours retain Sunday numbering and open-ended periods',()=>{assert.match(hoursText([{day:1,times:['09:00','12:00','13:00']}]),/Sunday: 09:00–12:00, 13:00–end of day/);assert.match(hoursText(null),/Load/);assert.equal(officeMap({coordinates:null}),null);});
+test('additional configured preset needs no application edits',async()=>{const {readFile}=await import('node:fs/promises');const c=JSON.parse(await readFile(new URL('../web/config.json',import.meta.url)));const next={label:'Long parcel',length:120,width:20,height:10};c.presets.push(next);assert.equal(quoteParams({...input,...next}).length,'120');});

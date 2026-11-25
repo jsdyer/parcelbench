@@ -1,53 +1,26 @@
-"""Exercise the built starter at a project subpath in Chromium."""
+"""Exercise two-box rates, saved forms, unknown dates, outlets and a project subpath."""
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-import shutil
-import tempfile
-import threading
+import json, os, shutil, tempfile, threading
 from playwright.sync_api import sync_playwright
-
-ROOT = Path(__file__).resolve().parents[1]
-
-
-class QuietHandler(SimpleHTTPRequestHandler):
-    def log_message(self, *args):
-        pass
-
-
-def main():
-    screenshots = ROOT / "browser-checks"
-    screenshots.mkdir(exist_ok=True)
-    with tempfile.TemporaryDirectory() as temporary:
-        shutil.copytree(ROOT / "dist", Path(temporary) / "example-tool")
-        server = ThreadingHTTPServer(("127.0.0.1", 0), partial(QuietHandler, directory=temporary))
-        threading.Thread(target=server.serve_forever, daemon=True).start()
-        try:
-            with sync_playwright() as p:
-                browser = p.chromium.launch()
-                page = browser.new_page(viewport={"width": 1280, "height": 1000})
-                errors = []
-                page.on("pageerror", lambda error: errors.append(str(error)))
-                page.goto(f"http://127.0.0.1:{server.server_port}/example-tool/")
-                page.locator("#sample").click()
-                assert page.locator("#output").input_value() == "Halifax\nLangley\nVancouver"
-                assert "1 duplicate removed" in page.locator("#status").inner_text()
-                page.locator("#input").fill('<img src=x onerror="alert(1)">\n<img src=x onerror="alert(1)">')
-                assert page.locator("#output").input_value() == '<img src=x onerror="alert(1)">'
-                assert page.locator("img").count() == 0
-                page.locator("#clear").click()
-                assert page.locator("#output").input_value() == ""
-                page.locator("#sample").click()
-                page.screenshot(path=str(screenshots / "desktop.png"), full_page=True)
-                page.set_viewport_size({"width": 390, "height": 844})
-                assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
-                page.screenshot(path=str(screenshots / "mobile.png"), full_page=True)
-                assert not errors, errors
-                browser.close()
-            print("Browser checks passed: project subpath, sample, clear, safe text and mobile layout")
-        finally:
-            server.shutdown()
-
-
-if __name__ == "__main__":
-    main()
+ROOT=Path(__file__).resolve().parents[1]
+class Quiet(SimpleHTTPRequestHandler):
+ def log_message(self,*args): pass
+with tempfile.TemporaryDirectory() as temp:
+ shutil.copytree(ROOT/'dist',Path(temp)/'parcelbench')
+ server=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory=temp));threading.Thread(target=server.serve_forever,daemon=True).start()
+ try:
+  with sync_playwright() as p:
+   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH'));page=browser.new_page(viewport={'width':1200,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+   def route(r):
+    if '/rates?' in r.request.url:
+     data={'quoteType':'counter','currency':'CAD','quotes':[{'code':'DOM.RP','name':'Regular Parcel','total':15,'base':12,'taxes':{'hst':2},'adjustments':[{'name':'Fuel','cost':1}],'options':[],'cubedWeight':2,'expectedDeliveryDate':None,'expectedTransitTime':None,'guaranteedDelivery':False}]}
+    elif '/offices?' in r.request.url:data={'offices':[{'id':'123','name':'Test office <img>','location':'Counter','address':'Halifax, NS','coordinates':{'latitude':44.65,'longitude':-63.57},'distance':0.5,'hours':None}]}
+    else:data={'hours':[{'day':1,'times':['09:00','17:00']}]}
+    r.fulfill(content_type='application/json',body=json.dumps({'fetched_at':'2026-11-25T12:00:00Z','data':data}),headers={'Access-Control-Allow-Origin':'*'})
+   page.route('**/api/parcelbench/**',route);page.goto(f'http://127.0.0.1:{server.server_port}/parcelbench/');page.locator('#example').click();page.locator('#quote').click();page.locator('#quote-results').wait_for(state='visible');assert page.locator('.quote').count()==2;assert 'Delivery date not returned' in page.locator('#quotes').inner_text()
+   page.locator('#save').click();page.reload();page.locator('#restore').click();assert page.locator('#origin').input_value()=='B3J 1S9';assert page.locator('#compare').is_checked();page.locator('#forget').click();assert page.locator('#restore').is_hidden()
+   page.locator('#office-postal').fill('B3J1S9');page.locator('#find-offices').click();page.get_by_text('Test office <img>').wait_for();page.get_by_text('Load opening hours',exact=True).click();page.get_by_text('Sunday: 09:00–17:00',exact=False).wait_for();assert page.locator('img').count()==0
+   (ROOT/'browser-checks').mkdir(exist_ok=True);page.screenshot(path=str(ROOT/'browser-checks/desktop.png'),full_page=True);page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth <= innerWidth');page.screenshot(path=str(ROOT/'browser-checks/mobile.png'),full_page=True);assert not errors,errors;browser.close()
+ finally:server.shutdown()

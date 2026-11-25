@@ -1,16 +1,23 @@
 {
-  "id": "coolcode-tool-template",
-  "title": "CoolCode Tool Starter",
-  "description": "A browser-only example that trims lines and removes exact duplicates.",
-  "category": "security",
-  "tags": ["text", "lines", "duplicates"],
-  "icon": "scan-search",
-  "url": "/coolcode-tool-template/",
-  "source": "https://github.com/jsdyer/coolcode-tool-template",
+  "id": "parcelbench",
+  "title": "Parcel Bench",
+  "description": "Compare Canada Post parcel prices and expected delivery dates, test two box sizes and find nearby post offices.",
+  "category": "money",
+  "tags": [
+    "Canada Post",
+    "shipping",
+    "parcel",
+    "post office",
+    "delivery",
+    "postal code"
+  ],
+  "icon": "package-search",
+  "url": "/parcelbench/",
+  "source": "https://github.com/jsdyer/parcelbench",
   "hosting": "project",
   "access": "browser",
   "data_info": {
-    "mode": "local",
-    "detail": "The browser reads the text you paste and compares its lines."
+    "mode": "live",
+    "detail": "Canada Post provides eligible consumer counter quotes, delivery estimates and post office details on request."
   }
 }

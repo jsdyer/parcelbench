@@ -1,0 +1,9 @@
+{
+  "gateway": "https://coolcode-visitor-api.jeffdyer.workers.dev",
+  "example": {"origin":"B3J 1S9","destination":"K1A 0B1","weight":"1","length":"30","width":"20","height":"15","weightB":"1","lengthB":"25","widthB":"18","heightB":"10"},
+  "presets": [
+    {"label":"Small box","length":25,"width":18,"height":10},
+    {"label":"Medium box","length":35,"width":25,"height":20},
+    {"label":"Large box","length":45,"width":35,"height":30}
+  ]
+}

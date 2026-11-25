@@ -1,37 +1,27 @@
-import { cleanLines } from './model.mjs';
-const input = document.querySelector('#input');
-const output = document.querySelector('#output');
-const status = document.querySelector('#status');
-const copy = document.querySelector('#copy');
-function update() {
-  const result = cleanLines(input.value);
-  output.value = result.text;
-  status.textContent = `${result.count} unique ${result.count === 1 ? 'line' : 'lines'}; ${result.removed} ${result.removed === 1 ? 'duplicate' : 'duplicates'} removed.`;
-  copy.disabled = result.count === 0;
-}
-input.addEventListener('input', update);
-document.querySelector('#sample').addEventListener('click', () => {
-  input.value = '  Halifax\nLangley\nHalifax\n\nVancouver  ';
-  update();
-});
-document.querySelector('#clear').addEventListener('click', () => {
-  input.value = '';
-  update();
-  input.focus();
-});
-if (navigator.clipboard && window.isSecureContext) {
-  copy.hidden = false;
-  copy.disabled = true;
-  copy.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(output.value);
-      status.textContent = 'Result copied.';
-    } catch {
-      output.focus();
-      output.select();
-      status.textContent = 'Copy was unavailable. The result is selected so you can copy it manually.';
-    }
-  });
-}
-// Namespace future preference storage as coolcode:<tool-id>:<key>.
-// Do not persist pasted text or uploads by default.
+import {quoteParams,postal,validPostal,rankedQuotes,comparison,hoursText,officeMap} from './model.mjs';
+const $=id=>document.getElementById(id), money=n=>n===null?'Not returned':new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format(n), key='coolcode:parcelbench:plan';
+const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
+const button=(text,fn)=>{const e=el('button',text);e.type='button';e.addEventListener('click',fn);return e;};
+let config,lastResult=null,quoteRequest=0;
+function values(){return Object.fromEntries(new FormData($('planner')));}
+function setValues(v){for(const [name,value] of Object.entries(v)){const field=$(name);if(field&&field.tagName==='INPUT'&&typeof value==='string')field.value=value.slice(0,100);} $('compare').checked=v.compare==='on';toggleBox();}
+function toggleBox(){$('box-b').hidden=!$('compare').checked;$('box-b-hint').hidden=$('compare').checked;}
+function storageState(){try{const saved=localStorage.getItem(key);$('restore').hidden=$('forget').hidden=!saved;}catch{$('save').disabled=true;}}
+async function api(path,params){const response=await fetch(config.gateway+'/api/parcelbench/'+path+'?'+new URLSearchParams(params),{referrerPolicy:'no-referrer',cache:'no-store',signal:AbortSignal.timeout(40000)});let data;try{data=await response.json();}catch{throw new Error('The gateway returned an unexpected response. Please retry later.');}if(!response.ok)throw new Error((data.error?.message||'Lookup unavailable.')+(response.status===429?' Wait '+(response.headers.get('Retry-After')||60)+' seconds before retrying.':''));return data;}
+function quoteCard(q){const card=el('article',undefined,'quote');card.append(el('h3',q.name),el('div',money(q.total),'price'),el('p',q.deliveryLabel+(q.expectedDeliveryDate?' · '+q.expectedDeliveryDate:''),'tag'+(q.meetsTarget===false?' late':'')));
+const details=el('details');details.append(el('summary','Price and delivery details'));details.append(el('p',[
+'Base: '+money(q.base),...Object.entries(q.taxes).map(([k,v])=>k.toUpperCase()+': '+money(v)),...q.adjustments.map(a=>a.name+': '+money(a.cost)),...q.options.map(a=>a.name+': '+money(a.cost)),q.cubedWeight===null?'Volumetric weight not returned':'Volumetric weight: '+q.cubedWeight+' kg',q.expectedTransitTime===null?'Transit time not returned':'Expected transit: '+q.expectedTransitTime+' business days','Guarantee flag: '+(q.guaranteedDelivery===null?'not returned':q.guaranteedDelivery?'yes, subject to Canada Post conditions':'no')].join('\n'),'breakdown'));card.append(details);return card;}
+function renderQuotes(result){$('quotes').replaceChildren();for(const set of result.boxes){const col=el('div');col.append(el('h3','Box '+set.box));const qs=rankedQuotes(set.response.data.quotes,result.input.targetDate);col.append(...qs.map(quoteCard));if(!qs.length)col.append(el('p','No eligible services were returned for this parcel.'));$('quotes').append(col);}
+$('quote-date').textContent='Quote retrieved '+new Date(result.boxes[0].response.fetched_at).toLocaleString()+' · '+postal(result.input.origin)+' → '+postal(result.input.destination)+' · mailing '+result.input.mailingDate;
+$('savings').textContent=result.boxes.length===2?comparison(result.boxes[0].response.data.quotes,result.boxes[1].response.data.quotes).map(c=>c.name+': '+(c.saving>0?'Box B saves '+money(c.saving):c.saving<0?'Box A saves '+money(-c.saving):'same price')).join('\n')||'No service was returned for both boxes.':'';$('quote-results').hidden=false;}
+$('planner').addEventListener('submit',async event=>{event.preventDefault();$('quote').disabled=true;$('quote-results').hidden=true;lastResult=null;const token=++quoteRequest,input=values();try{const a=quoteParams(input),b=$('compare').checked?quoteParams(input,'B'):null;$('status').textContent='Requesting Box A’s current eligible counter rates…';const boxes=[{box:'A',response:await api('rates',a)}];if(b){$('status').textContent='Requesting Box B’s rates…';boxes.push({box:'B',response:await api('rates',b)});}if(token!==quoteRequest){$('status').textContent='Details changed during lookup. Request fresh rates for this plan.';return;}lastResult={input,boxes};renderQuotes(lastResult);$('status').textContent='Current comparison ready. Check the returned delivery date and conditions.';}catch(error){$('status').textContent=error.name==='TimeoutError'?'The request timed out. Please retry later.':error.message;}finally{$('quote').disabled=false;}});
+$('planner').addEventListener('input',()=>{quoteRequest++;toggleBox();if(lastResult){lastResult=null;$('quote-results').hidden=true;$('status').textContent='Details changed. Request fresh rates for this plan.';}});
+$('example').addEventListener('click',()=>{quoteRequest++;setValues({...config.example,mailingDate:$('mailingDate').value,compare:'on'});$('office-postal').value=config.example.origin;$('status').textContent='Example filled. Submit to request real prices; no sample quotes are shown.';$('quote-results').hidden=true;lastResult=null;});
+$('save').addEventListener('click',()=>{try{localStorage.setItem(key,JSON.stringify(values()));storageState();$('status').textContent='Plan saved on this device. Refreshing does not erase it; use Restore saved plan.';}catch{$('status').textContent='Device storage is unavailable. You can still use this planner.';}});
+$('restore').addEventListener('click',()=>{quoteRequest++;try{const raw=localStorage.getItem(key);if(!raw||raw.length>6000)throw new Error();const v=JSON.parse(raw);setValues(v);$('quote-results').hidden=true;lastResult=null;$('status').textContent='Saved plan restored. Request current prices again.';}catch{$('status').textContent='The saved plan could not be read.';}});
+$('forget').addEventListener('click',()=>{try{localStorage.removeItem(key);storageState();$('status').textContent='Saved plan removed from this device.';}catch{$('status').textContent='Could not access device storage.';}});
+$('export').addEventListener('click',()=>{if(!lastResult)return;const blob=new Blob([JSON.stringify({tool:'Parcel Bench',...lastResult,notice:'Dated consumer estimates, not an arrival promise. See Canada Post conditions.'},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download='parcelbench-comparison.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+function showOffice(office){const card=el('article',undefined,'office');card.append(el('h3',office.name),el('p',[office.location,office.address].filter(Boolean).join(' · ')));if(office.distance!==null)card.append(el('p',office.distance+' km from the search location'));const hours=el('p',hoursText(office.hours),'hours');const load=button('Load opening hours',async()=>{load.disabled=true;try{const result=await api('office',{id:office.id});hours.textContent=hoursText(result.data.hours)+'\nRetrieved '+new Date(result.fetched_at).toLocaleString();load.hidden=true;}catch(error){hours.textContent=error.message;load.disabled=false;}});card.append(load,hours);const map=officeMap(office);if(map)card.append(button('Show on map',()=>{$('map').src=map;$('map-wrap').hidden=false;$('map-wrap').scrollIntoView({behavior:'smooth',block:'nearest'});}));return card;}
+$('office-form').addEventListener('submit',async event=>{event.preventDefault();$('find-offices').disabled=true;$('offices').replaceChildren();$('map-wrap').hidden=true;$('map').removeAttribute('src');try{const p=postal($('office-postal').value);if(!validPostal(p))throw new Error('Enter a valid Canadian postal code.');$('office-status').textContent='Finding nearby offices…';const result=await api('offices',{postal:p});$('offices').append(...result.data.offices.map(showOffice));$('office-status').textContent=result.data.offices.length+' offices returned · '+new Date(result.fetched_at).toLocaleString()+'. Missing hours do not mean closed.';}catch(error){$('office-status').textContent=error.message;}finally{$('find-offices').disabled=false;}});
+async function init(){const response=await fetch('./config.json');if(!response.ok)throw new Error('Could not load planner settings.');config=await response.json();for(const parent of document.querySelectorAll('.presets'))for(const preset of config.presets)parent.append(button(preset.label,()=>{quoteRequest++;for(const k of ['length','width','height'])$(k+(parent.dataset.box==='B'?'B':'')).value=preset[k];lastResult=null;$('quote-results').hidden=true;}));const local=new Date();local.setMinutes(local.getMinutes()-local.getTimezoneOffset());$('mailingDate').value=local.toISOString().slice(0,10);$('mailingDate').min=$('mailingDate').value;storageState();$('quote').disabled=$('example').disabled=$('find-offices').disabled=false;}
+init().catch(error=>{$('status').textContent=error.message;$('quote').disabled=$('find-offices').disabled=true;});

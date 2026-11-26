@@ -5,7 +5,7 @@ Compare eligible Canada Post consumer counter rates for domestic Canadian parcel
 [Use Parcel Bench](https://coolcode.ca/parcelbench/)
 
 <!-- coolcode:guide -->
-Enter the two postal codes, packed weight, dimensions and mailing date. Add an arrive-by date to flag returned estimates that fit it. Compare the same contents in a smaller box to see the price difference for services available to both. Quotes use consumer counter rates; a future mailing date changes the delivery estimate, not the quote’s price date. Save a plan only if you want it retained on this device. Post office hours are not parcel acceptance cutoffs.
+Open [parcel tracking](https://coolcode.ca/parcelbench/tracking/) to organize tracking numbers locally and check Canada Post delivery alerts, or enter the two postal codes, packed weight, dimensions and mailing date. Add an arrive-by date to flag returned estimates that fit it. Compare the same contents in a smaller box to see the price difference for services available to both. Quotes use consumer counter rates; a future mailing date changes the delivery estimate, not the quote’s price date. Save a plan only if you want it retained on this device. Post office hours are not parcel acceptance cutoffs.
 <!-- /coolcode:guide -->
 
 ## Source and interpretation
@@ -14,7 +14,7 @@ The production JSON [Canada Post Rating API](https://developer-developpeur.canad
 
 [Post Office Services](https://developer-developpeur.canadapost-postescanada.ca/devportal-portaildesdeveloppeurs/api/overview/postoffice) searches up to ten counters and fetches hours on request. When hours are unavailable here, use the official Canada Post finder link on the outlet card before visiting. This app cannot infer that the original source omitted hours, and unavailable hours are not evidence of closure. The API supplies opening hours, not acceptance cutoffs. Maps use OpenStreetMap only when requested.
 
-Rates and locations are queried live through CoolCode's fixed-host, bounded gateway. There is no collector or refresh schedule. Failures show an actionable error rather than sample rates. Freshness is the API retrieval time, never the static site build time. No tracking, label purchase, address book or payment operation is exposed.
+Rates and locations are queried live through CoolCode's fixed-host, bounded gateway. There is no collector or refresh schedule. Failures show an actionable error rather than sample rates. Freshness is the API retrieval time, never the static site build time. The parcel organizer opens official Canada Post tracking and delivery alerts. Optional inline events require production Tracking access and permission to offer the integration publicly. After confirming these with Canada Post, set Worker variable `CANADAPOST_PUBLIC_TRACKING=enabled` and `inlineTracking: true` in web/config.json. The fixed POST gateway accepts one PIN or notice number, returns selected scan fields, disables caching and omits addressee, signature and customer references. Public handoff works without this integration. [Developer Program terms](https://www.canadapost-postescanada.ca/information/app/drc/home) · [Tracking API](https://developer-developpeur.canadapost-postescanada.ca/devportal-portaildesdeveloppeurs/product/tracking/api/tracking-api-1.0.0).
 
 ## API keys
 

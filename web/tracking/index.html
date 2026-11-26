@@ -1,0 +1,13 @@
+<!doctype html><html lang="en-CA"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer">
+<title>Track a Canada Post Parcel &amp; Check Delivery Alerts · CoolCode</title><meta name="description" content="Open Canada Post tracking, keep a private list of your parcels on this device, and check official delivery alerts.">
+<link rel="canonical" href="https://coolcode.ca/parcelbench/tracking/"><link rel="stylesheet" href="../style.css">
+<script type="module" src="track.mjs"></script><script defer src="/assets/tool-metrics.js" referrerpolicy="no-referrer"></script></head>
+<body><header><a href="../">Canada Post Shipping Calculator</a><a href="https://coolcode.ca/">CoolCode</a></header><main><p class="eyebrow">Parcel Bench</p><h1>Track a Canada Post parcel</h1>
+<p>Enter your tracking number or the number on a delivery notice. Check recent scans at Canada Post or save the parcel on this device for your next visit.</p>
+<form id="track"><label>Tracking or delivery notice number<input id="number" required autocomplete="off" spellcheck="false" maxlength="40"></label>
+<label>Parcel nickname (optional)<input id="label" maxlength="60" autocomplete="off"></label>
+<label>Delivery alerts<select id="area"><option value="ca">Within Canada</option><option value="international">U.S. or international</option></select></label>
+<div class="actions"><button type="submit">Open Canada Post tracking</button><button id="save" type="button">Save on this device</button><button id="events" hidden type="button">Check events here</button></div></form>
+<p id="notice" role="status"></p><p><a id="alerts" href="https://www.canadapost-postescanada.ca/cpc/doc/en/news-and-media/delivery-service-alerts.pdf">Canadian delivery alerts (PDF)</a></p>
+<section><h2>Saved parcels</h2><p>Saving keeps the number and nickname in this browser. Opening official tracking sends the number to Canada Post.</p><ul id="saved"></ul></section>
+<section id="history" hidden><h2>Tracking events</h2><p id="summary"></p><ol id="timeline"></ol></section><noscript>Open <a href="https://www.canadapost-postescanada.ca/track">Canada Post tracking</a> to enter your number.</noscript></main></body></html>

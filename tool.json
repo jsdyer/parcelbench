@@ -1,7 +1,7 @@
 {
   "id": "parcelbench",
-  "title": "Parcel Bench",
-  "description": "Compare Canada Post parcel prices and expected delivery dates, test two box sizes and find nearby post offices.",
+  "title": "Canada Post Shipping Calculator & Parcel Tracker",
+  "description": "Compare parcel prices and delivery dates, find a post office, and organize your Canada Post tracking numbers on this device.",
   "category": "money",
   "tags": [
     "Canada Post",

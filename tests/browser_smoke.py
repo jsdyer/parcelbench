@@ -24,5 +24,17 @@ with tempfile.TemporaryDirectory() as temp:
    page.locator('#save').click();page.reload();page.locator('#restore').click();assert page.locator('#origin').input_value()=='B3J 1S9';assert page.locator('#compare').is_checked();page.locator('#forget').click();assert page.locator('#restore').is_hidden()
    page.locator('#office-postal').fill('B3J1S9');page.locator('#find-offices').click();page.get_by_text('Test office <img>').wait_for();page.locator('.office').first.get_by_role('button',name='Load opening hours',exact=True).click();page.get_by_text('Sunday: 09:00–17:00',exact=False).wait_for();assert page.locator('img').count()==0
    second=page.locator('.office').nth(1);second.get_by_role('button',name='Load opening hours',exact=True).click();second.get_by_text('Opening hours are unavailable here.',exact=False).wait_for();assert second.get_by_role('link',name='Canada Post’s official finder').get_attribute('href')=='https://www.canadapost-postescanada.ca/cpc/en/tools/find-a-post-office.page'
-   (ROOT/'browser-checks').mkdir(exist_ok=True);page.screenshot(path=str(ROOT/'browser-checks/desktop.png'),full_page=True);page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth <= innerWidth');page.screenshot(path=str(ROOT/'browser-checks/mobile.png'),full_page=True);assert not errors,errors;browser.close()
+   (ROOT/'browser-checks').mkdir(exist_ok=True);page.screenshot(path=str(ROOT/'browser-checks/desktop.png'),full_page=True);page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth <= innerWidth');page.screenshot(path=str(ROOT/'browser-checks/mobile.png'),full_page=True);assert not errors,errors
+   page.goto(f'http://127.0.0.1:{server.server_port}/parcelbench/tracking/')
+   page.locator('#number').fill('1234 5678 9012 3456')
+   page.locator('#label').fill('My test parcel')
+   page.locator('#save').click()
+   page.reload()
+   track=page.get_by_role('link',name='My test parcel · 1234567890123456')
+   assert track.get_attribute('href').endswith('/1234567890123456')
+   page.get_by_role('button',name='Remove My test parcel').click()
+   page.get_by_text('No parcels saved.').wait_for()
+   assert page.locator('#events').is_hidden()
+   assert not errors,errors
+   browser.close()
  finally:server.shutdown()

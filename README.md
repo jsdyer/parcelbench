@@ -5,8 +5,10 @@ Compare eligible Canada Post consumer counter rates for domestic Canadian parcel
 [Use Parcel Bench](https://coolcode.ca/parcelbench/)
 
 <!-- coolcode:guide -->
-Open [parcel tracking](https://coolcode.ca/parcelbench/tracking/) to organize tracking numbers locally and check Canada Post delivery alerts, or enter the two postal codes, packed weight, dimensions and mailing date. Add an arrive-by date to flag returned estimates that fit it. Compare the same contents in a smaller box to see the price difference for services available to both. Quotes use consumer counter rates; a future mailing date changes the delivery estimate, not the quote’s price date. Save a plan only if you want it retained on this device. Post office hours are not parcel acceptance cutoffs.
+Compare box sizes, prices and expected delivery dates using your postal codes and packed dimensions, or find nearby post office hours. Save parcel numbers on this device to open official tracking and destination alerts.
 <!-- /coolcode:guide -->
+
+[Open parcel tracking](https://coolcode.ca/parcelbench/tracking/).
 
 ## Source and interpretation
 
